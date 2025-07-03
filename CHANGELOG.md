@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+#### v0.0.3
+> 03 Jul 2025 01:25 PM
+
+- Updated the paths of the css and javascript files so they are relative paths and not absolute paths for github pages.
+
 #### v0.0.2
 
 > 03 Jul 2025 02:38 AM
