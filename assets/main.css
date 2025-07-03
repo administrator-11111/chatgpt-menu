@@ -33,7 +33,7 @@ body::before {
 h1,
 h2,
 h3 {
-    color: #00a2e3;
+    color: #0277a6;;
 }
 
 header {
@@ -48,7 +48,7 @@ header {
 }
 
 header h2 {
-    color: #0077a6;
+    color: #00658c;
 }
 
 button {
