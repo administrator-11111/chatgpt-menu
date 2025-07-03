@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tótem Pedido - Casino UCM</title>
+<style>
+  /* Reset básico */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: Arial, sans-serif;
+    background: white;
+    color: black;
+    margin: 0; padding: 1rem;
+    min-height: 100vh;
+  }
+  h1, h2, h3 {
+    color: #00a2e3;
+  }
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    background-color: #00a2e3;
+    color: white;
+    transition: background-color 0.3s ease;
+  }
+  button:hover:not(:disabled) {
+    background-color: #008fcc;
+  }
+  button:disabled {
+    background-color: #a0cde9;
+    cursor: not-allowed;
+  }
+  .container {
+    max-width: 900px;
+    margin: auto;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+  }
+  .category {
+    margin-bottom: 1.5rem;
+  }
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+  .items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(140px,1fr));
+    gap: 0.75rem;
+  }
+  .card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 0.75rem;
+    background: #f9f9f9;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .item-name {
+    font-weight: 600;
+  }
+  .item-price {
+    margin: 0.5rem 0;
+    color: #555;
+  }
+  /* Carrito */
+  .cart {
+    background: #f0f8ff;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 0 8px #00a2e3aa;
+  }
+  .cart-empty {
+    color: #888;
+  }
+  .cart-list {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 1rem;
+  }
+  .cart-list li {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #ccc;
+    padding: 0.3rem 0;
+  }
+  .cart-total {
+    font-weight: 700;
+    font-size: 1.2rem;
+    display: flex;
+    justify-content: space-between;
+  }
+  /* Modal */
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background-color: #00000088;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+  .modal-bg.active {
+    display: flex;
+  }
+  .modal {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 0 15px #00a2e3aa;
+    text-align: center;
+  }
+  .modal h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+  .modal button {
+    margin: 0.3rem;
+    width: 120px;
+  }
+  /* Loader */
+  .loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #00a2e3;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1.2s linear infinite;
+    margin: 1rem auto;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg);}
+    100% {transform: rotate(360deg);}
+  }
+  /* Boleta */
+  .receipt {
+    background: #eef9ff;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+    text-align: left;
+    font-size: 0.9rem;
+    color: #333;
+  }
+  .receipt p {
+    margin: 0.2rem 0;
+  }
+  .receipt ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0.5rem 0;
+  }
+  .receipt ul li {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dotted #ccc;
+    padding: 0.25rem 0;
+  }
+  .receipt .total {
+    font-weight: 700;
+    margin-top: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+  }
+  /* Iconos simples */
+  .icon {
+    width: 20px;
+    height: 20px;
+    fill: #00a2e3;
+  }
+  /* Responsive */
+  @media(max-width: 700px){
+    .grid-3 {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Tótem de Pedido - Casino UCM</h1>
+    <div class="grid-3">
+      <section>
+        <h2>Menú</h2>
+        <div id="menu-container"></div>
+      </section>
+      <aside>
+        <h2>Tu Pedido</h2>
+        <div class="cart" id="cart-container">
+          <p class="cart-empty">No has agregado productos.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Modal de selección método pago -->
+  <div id="modal-payment" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="modal-payment-title">
+    <div class="modal">
+      <h3 id="modal-payment-title">Selecciona el método de pago</h3>
+      <button data-method="Débito">Débito</button>
+      <button data-method="Crédito">Crédito</button>
+      <button data-method="EdenRed">EdenRed</button>
+      <br />
+      <button id="modal-payment-cancel" style="margin-top:1rem; background:#ccc; color:#333;">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal de proceso de pago -->
+  <div id="modal-processing" class="modal-bg" role="alert" aria-live="assertive" aria-busy="true" aria-label="Procesando pago">
+    <div class="modal">
+      <h3>Procesando pago</h3>
+      <div class="loader" aria-hidden="true"></div>
+      <p id="processing-message"></p>
+    </div>
+  </div>
+
+  <!-- Modal de pago exitoso -->
+  <div id="modal-success" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="modal-success-title">
+    <div class="modal">
+      <h3 id="modal-success-title">Compra realizada</h3>
+      <p>¡Compra realizada con éxito!</p>
+      <div class="receipt" id="receipt-container"></div>
+      <button id="success-close">Volver al inicio</button>
+    </div>
+  </div>
+
+<script>
+  // Datos menú
+  const MENU = [
+    { id: 1, nombre: "Empanada de Queso", precio: 1200, categoria: "Comestibles", icon: "🍬" },
+    { id: 2, nombre: "Completo Italiano", precio: 1800, categoria: "Comestibles", icon: "🌭" },
+    { id: 3, nombre: "Colación Vegetariana", precio: 2500, categoria: "Almuerzo", icon: "🥗" },
+    { id: 4, nombre: "Colación Carne", precio: 2700, categoria: "Almuerzo", icon: "🍖" },
+    { id: 5, nombre: "Café", precio: 800, categoria: "Bebidas", icon: "☕" },
+    { id: 6, nombre: "Jugo Natural", precio: 1000, categoria: "Bebidas", icon: "🧃" },
+    { id: 7, nombre: "Queque", precio: 900, categoria: "Postre", icon: "🍰" },
+    { id: 8, nombre: "Galletas", precio: 600, categoria: "Postre", icon: "🍪" },
+  ];
+
+  const CATEGORIAS = [
+    { nombre: "Almuerzo", icon: "🍽️" },
+    { nombre: "Bebidas", icon: "🥤" },
+    { nombre: "Comestibles", icon: "🍬" },
+    { nombre: "Postre", icon: "🍰" },
+  ];
+
+  const colorPrincipal = "#00a2e3";
+
+  // Estado carrito
+  let carrito = [];
+
+  // Utils
+  function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
+  // Crear menú en DOM
+  function renderMenu() {
+    const container = document.getElementById("menu-container");
+    container.innerHTML = "";
+    CATEGORIAS.forEach(({ nombre, icon }) => {
+      const catDiv = document.createElement("div");
+      catDiv.className = "category";
+
+      const header = document.createElement("div");
+      header.className = "category-header";
+      header.innerHTML = `<span class="icon">${icon}</span> <span>${nombre}</span>`;
+      catDiv.appendChild(header);
+
+      const itemsDiv = document.createElement("div");
+      itemsDiv.className = "items";
+
+      MENU.filter(i => i.categoria === nombre).forEach(item => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const name = document.createElement("p");
+        name.className = "item-name";
+        name.textContent = item.nombre;
+        card.appendChild(name);
+
+        const price = document.createElement("p");
+        price.className = "item-price";
+        price.textContent = `$${formatNumber(item.precio)}`;
+        card.appendChild(price);
+
+        const btn = document.createElement("button");
+        btn.textContent = "Agregar";
+        btn.style.marginTop = "auto";
+        btn.onclick = () => agregar(item);
+        card.appendChild(btn);
+
+        itemsDiv.appendChild(card);
+      });
+
+      catDiv.appendChild(itemsDiv);
+      container.appendChild(catDiv);
+    });
+  }
+
+  // Agregar producto al carrito
+  function agregar(item) {
+    const index = carrito.findIndex(p => p.id === item.id);
+    if (index > -1) {
+      carrito[index].cantidad++;
+    } else {
+      carrito.push({ ...item, cantidad: 1 });
+    }
+    renderCarrito();
+  }
+
+  // Renderizar carrito
+  function renderCarrito() {
+    const container = document.getElementById("cart-container");
+    container.innerHTML = "";
+
+    if (carrito.length === 0) {
+      const p = document.createElement("p");
+      p.className = "cart-empty";
+      p.textContent = "No has agregado productos.";
+      container.appendChild(p);
+      return;
+    }
+
+    const ul = document.createElement("ul");
+    ul.className = "cart-list";
+
+    carrito.forEach(item => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span>${item.nombre} x${item.cantidad}</span> <span>$${formatNumber(item.precio * item.cantidad)}</span>`;
+      ul.appendChild(li);
+    });
+
+    container.appendChild(ul);
+
+    const total = carrito.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
+    const divTotal = document.createElement("div");
+    divTotal.className = "cart-total";
+    divTotal.innerHTML = `<span>Total</span> <span>$${formatNumber(total)}</span>`;
+    container.appendChild(divTotal);
+
+    const btnConfirm = document.createElement("button");
+    btnConfirm.textContent = "Confirmar Pedido";
+    btnConfirm.onclick = () => abrirModalPago();
+    container.appendChild(btnConfirm);
+  }
+
+  // Modal pago
+  const modalPago = document.getElementById("modal-payment");
+  const modalProcesando = document.getElementById("modal-processing");
+  const modalExito = document.getElementById("modal-success");
+  const processingMsg = document.getElementById("processing-message");
+  const receiptContainer = document.getElementById("receipt-container");
+
+  function abrirModalPago() {
+    if (carrito.length === 0) return;
+    modalPago.classList.add("active");
+  }
+
+  // Cerrar modal pago
+  document.getElementById("modal-payment-cancel").onclick = () => {
+    modalPago.classList.remove("active");
+  };
+
+  // Manejar selección método pago
+  modalPago.querySelectorAll("button[data-method]").forEach(btn => {
+    btn.onclick = () => {
+      const metodo = btn.getAttribute("data-method");
+      modalPago.classList.remove("active");
+      iniciarProcesoPago(metodo);
+    };
+  });
+
+  function iniciarProcesoPago(metodo) {
+    let mensaje = "";
+    if (metodo === "Débito" || metodo === "Crédito") {
+      mensaje = "Por favor, inserta tu tarjeta en el lector de pagos.";
+    } else {
+      mensaje = "Ingresa tu código dinámico de EdenRed desde la aplicación móvil.";
+    }
+    processingMsg.textContent = mensaje;
+
+    modalProcesando.classList.add("active");
+
+    setTimeout(() => {
+      modalProcesando.classList.remove("active");
+      mostrarExitoPago(metodo);
+    }, 2500);
+  }
+
+  // Mostrar éxito y boleta
+  function mostrarExitoPago(metodo) {
+    // Generar ID y fecha
+    const fecha = new Date();
+    const fechaStr = fecha.toLocaleString();
+    const transId = Math.random().toString(36).substr(2, 10).toUpperCase();
+
+    // Construir boleta
+    let htmlBoleta = `
+      <p><strong>Fecha:</strong> ${fechaStr}</p>
+      <p><strong>ID Transacción:</strong> ${transId}</p>
+      <ul>
+    `;
+    let total = 0;
+    carrito.forEach(item => {
+      const itemTotal = item.precio * item.cantidad;
+      total += itemTotal;
+      htmlBoleta += `<li>${item.nombre} x${item.cantidad} <span style="float:right;">$${formatNumber(itemTotal)}</span></li>`;
+    });
+    htmlBoleta += `</ul>`;
+    htmlBoleta += `<div class="total"><span>Total</span><span>$${formatNumber(total)}</span></div>`;
+
+    receiptContainer.innerHTML = htmlBoleta;
+
+    modalExito.classList.add("active");
+    carrito = [];
+    renderCarrito();
+  }
+
+  document.getElementById("success-close").onclick = () => {
+    modalExito.classList.remove("active");
+  };
+
+  // Inicializar
+  renderMenu();
+  renderCarrito();
+</script>
+</body>
+</html>
