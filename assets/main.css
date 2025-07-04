@@ -70,7 +70,7 @@ button:disabled {
 }
 
 main {
-    max-width: 1400px; /* Antes era 900px */
+    max-width: 900px; /* Antes era 900px */
     padding-top: 8rem;
     margin: auto;
 }
