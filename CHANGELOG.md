@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+
+#### v0.0.5
+> 03 Jul 2025 03:02 PM
+
+- Fixed the background path again.
+
 #### v0.0.4
 > 03 Jul 2025 02:06 PM
 
@@ -11,7 +17,6 @@ All notable changes to this project will be documented in this file.
 > 03 Jul 2025 01:25 PM
 
 - Updated the paths of the css and javascript files so they are relative paths and not absolute paths for github pages.
-- Updated the path on the css file of the background so now it has a relative path and not an absoluta path for github pages.
 
 #### v0.0.2
 
